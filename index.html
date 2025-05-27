@@ -57,7 +57,10 @@
   <canvas id="certificateCanvas" width="1121" height="768"></canvas>
 
   <script>
-    const sheetURL = "https://script.google.com/macros/s/AKfycbykhLRu6jbqi3cMORgX11AXU4hdzAdnJ8gEu4Qu6PpDhniqF_TuoegzRxPoDiaX0Gvq9A/exec";
+    const googleFormURL = "https://docs.google.com/forms/d/e/1FAIpQLSdjgOkituBhcgLGGogUZLnquoBxPlMbIdsHoTCh6RzLL8iQlA/formResponse";
+    const fieldName = "entry.2005620554";
+    const fieldDate = "entry.1166974658";
+    const fieldCert = "entry.839337160";
 
     function getTodayDate() {
       const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
@@ -105,12 +108,15 @@
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
         pdf.save(name + "_Certificate.pdf");
 
-        fetch(sheetURL, {
+        const formData = new FormData();
+        formData.append(fieldName, name);
+        formData.append(fieldDate, date);
+        formData.append(fieldCert, certNo);
+        fetch(googleFormURL, {
           method: "POST",
-          body: JSON.stringify({ name, date, certNo }),
-          headers: { "Content-Type": "application/json" }
-        }).then(res => res.text()).then(result => console.log("Google Sheet response:", result))
-          .catch(err => console.error("Log Error:", err));
+          mode: "no-cors",
+          body: formData
+        }).then(() => console.log("Logged to Google Form"));
       };
     }
   </script>
