@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Third Wave Coffee Certificate Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    input {
+      padding: 10px;
+      margin: 10px;
+      width: 250px;
+    }
+    button {
+      padding: 12px 20px;
+      background-color: #1f4e79;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Third Wave Coffee - Certificate Generator</h2>
+  <input type="text" id="nameInput" placeholder="Enter your name" />
+  <br>
+  <button onclick="generateCertificate()">Generate Certificate</button>
+
+  <canvas id="certificateCanvas" width="1121" height="768"></canvas>
+
+  <script>
+    const sheetURL = "https://script.google.com/macros/s/AKfycbykhLRu6jbqi3cMORgX11AXU4hdzAdnJ8gEu4Qu6PpDhniqF_TuoegzRxPoDiaX0Gvq9A/exec";
+
+    function getTodayDate() {
+      const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+      return new Date().toLocaleDateString('en-GB', options).replace(/\//g, '/');
+    }
+
+    function getNextCertNumber() {
+      let count = localStorage.getItem("twcCertCounter");
+      count = count ? parseInt(count) + 2 : 250001;
+      localStorage.setItem("twcCertCounter", count);
+      return "TWCFS-" + count;
+    }
+
+    async function generateCertificate() {
+      const { jsPDF } = window.jspdf;
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) return alert("Please enter a name");
+
+      const date = getTodayDate();
+      const certNo = getNextCertNumber();
+
+      const canvas = document.getElementById('certificateCanvas');
+      const ctx = canvas.getContext('2d');
+      const image = new Image();
+      image.src = 'certificate.png';
+
+      image.onload = function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        ctx.font = 'bold 28px Arial';
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.fillText(name, canvas.width / 2, 360);
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText(date, 285, 562);
+        ctx.fillText(certNo, 830, 562);
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'landscape',
+          unit: 'px',
+          format: [canvas.width, canvas.height]
+        });
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save(name + "_Certificate.pdf");
+
+        fetch(sheetURL, {
+          method: "POST",
+          body: JSON.stringify({ name, date, certNo }),
+          headers: { "Content-Type": "application/json" }
+        }).then(res => res.text()).then(result => console.log("Google Sheet response:", result))
+          .catch(err => console.error("Log Error:", err));
+      };
+    }
+  </script>
+</body>
+</html>
