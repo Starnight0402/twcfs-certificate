@@ -20,85 +20,64 @@
       box-sizing: border-box;
     }
     h2 {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       text-align: center;
       margin-bottom: 20px;
     }
-    input {
-      padding: 12px;
-      margin: 10px 0;
-      width: 90%;
-      max-width: 300px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+    canvas {
+      display: none;
     }
     button {
-      padding: 14px 24px;
-      font-size: 1rem;
+      padding: 12px 24px;
       background-color: #1f4e79;
       color: white;
       border: none;
       border-radius: 6px;
+      font-size: 1rem;
       cursor: pointer;
-      margin-top: 10px;
-    }
-    canvas {
-      display: none;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
-  <h2>Third Wave Coffee<br>Certificate Generator</h2>
-  <input type="text" id="nameInput" placeholder="Enter your name" />
-  <button onclick="generateCertificate()">Generate & Download Certificate</button>
+  <h2>Your Certificate is Ready!</h2>
+  <button onclick="generateCertificate()">Open Certificate</button>
 
   <canvas id="certificateCanvas" width="1121" height="768"></canvas>
 
   <script>
-    const googleFormURL = "https://docs.google.com/forms/d/e/1FAIpQLSdjgOkituBhcgLGGogUZLnquoBxPlMbIdsHoTCh6RzLL8iQlA/formResponse";
-    const fieldName = "entry.2005620554";
-    const fieldDate = "entry.1166974658";
-    const fieldCert = "entry.839337160";
-
-    function getTodayDate() {
-      const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-      return new Date().toLocaleDateString('en-GB', options).replace(/\//g, '/');
+    function getParam(param) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(param);
     }
 
-    function getNextCertNumber() {
-      let count = localStorage.getItem("twcCertCounter");
-      count = count ? parseInt(count) + 2 : 250001;
-      localStorage.setItem("twcCertCounter", count);
-      return "TWCFS-" + count;
-    }
+    const canvas = document.getElementById('certificateCanvas');
+    const ctx = canvas.getContext('2d');
+    const image = new Image();
+    image.src = 'certificate.png';
 
-    async function generateCertificate() {
-      const { jsPDF } = window.jspdf;
-      const name = document.getElementById('nameInput').value.trim();
-      if (!name) return alert("Please enter a name");
+    const name = decodeURIComponent(getParam("name") || "Employee Name");
+    const empID = getParam("id") || "000001";
+    const certNo = "TWCFS" + ("000000" + empID).slice(-6);
+    const date = new Date().toLocaleDateString('en-GB').replace(/\//g, '/');
 
-      const date = getTodayDate();
-      const certNo = getNextCertNumber();
-
-      const canvas = document.getElementById('certificateCanvas');
-      const ctx = canvas.getContext('2d');
-      const image = new Image();
-      image.src = 'certificate.png';
-
+    function generateCertificate() {
       image.onload = function () {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        ctx.font = 'bold 28px Arial';
         ctx.fillStyle = '#000000';
+        ctx.font = 'bold 28px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(name, canvas.width / 2, 360);
-        ctx.font = 'bold 22px Arial';
-        ctx.fillText(date, 285, 562);
-        ctx.fillText(certNo, 830, 562);
 
+        ctx.font = 'bold 22px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(date, 230, 562);
+        ctx.textAlign = 'right';
+        ctx.fillText(certNo, 910, 562);
+
+        const { jsPDF } = window.jspdf;
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
           orientation: 'landscape',
@@ -106,19 +85,12 @@
           format: [canvas.width, canvas.height]
         });
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-        pdf.save(name + "_Certificate.pdf");
-
-        const formData = new FormData();
-        formData.append(fieldName, name);
-        formData.append(fieldDate, date);
-        formData.append(fieldCert, certNo);
-        fetch(googleFormURL, {
-          method: "POST",
-          mode: "no-cors",
-          body: formData
-        }).then(() => console.log("Logged to Google Form"));
+        const blob = pdf.output('blob');
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
       };
     }
   </script>
+
 </body>
 </html>
