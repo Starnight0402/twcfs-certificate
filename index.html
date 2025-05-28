@@ -41,8 +41,8 @@
 </head>
 <body>
 
-  <h2>Your Certificate is Ready!</h2>
-  <button onclick="generateCertificate()">Preview & Download Certificate</button>
+  <h2>Download Your Certificate</h2>
+  <button onclick="generateCertificate()">Download Certificate</button>
 
   <canvas id="certificateCanvas" width="1121" height="768"></canvas>
 
@@ -73,9 +73,11 @@
 
         ctx.font = 'bold 22px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(date, 230, 562);
+        ctx.fillText(date, 135, 562);
+        ctx.textAlign = 'center';
+        ctx.fillText(empID, canvas.width / 2, 562);
         ctx.textAlign = 'right';
-        ctx.fillText(certNo, 910, 562);
+        ctx.fillText(certNo, 985, 562);
 
         const { jsPDF } = window.jspdf;
         const imgData = canvas.toDataURL('image/png');
@@ -85,24 +87,7 @@
           format: [canvas.width, canvas.height]
         });
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-
-        const blob = pdf.output('blob');
-        const url = URL.createObjectURL(blob);
-
-        const html = `
-          <html>
-            <head><title>Your Certificate</title></head>
-            <body style='margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f9f9f9;'>
-              <iframe src="${url}" width="100%" height="80%" style="border:none;"></iframe>
-              <a href="${url}" download="${name}_Certificate.pdf" style="margin-top:20px;padding:12px 20px;background:#1f4e79;color:white;border-radius:6px;text-decoration:none;font-family:Arial;'>Download PDF</a>
-            </body>
-          </html>
-        `;
-
-        const preview = window.open();
-        preview.document.open();
-        preview.document.write(html);
-        preview.document.close();
+        pdf.save(name + "_Certificate.pdf");
       };
     }
   </script>
