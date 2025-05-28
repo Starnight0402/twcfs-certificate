@@ -42,7 +42,7 @@
 <body>
 
   <h2>Your Certificate is Ready!</h2>
-  <button onclick="generateCertificate()">Open Certificate</button>
+  <button onclick="generateCertificate()">Preview & Download Certificate</button>
 
   <canvas id="certificateCanvas" width="1121" height="768"></canvas>
 
@@ -62,7 +62,7 @@
     const certNo = "TWCFS" + ("000000" + empID).slice(-6);
     const date = new Date().toLocaleDateString('en-GB').replace(/\//g, '/');
 
-    function generateCertificate() {
+    async function generateCertificate() {
       image.onload = function () {
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
@@ -85,9 +85,24 @@
           format: [canvas.width, canvas.height]
         });
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+
         const blob = pdf.output('blob');
         const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
+
+        const html = `
+          <html>
+            <head><title>Your Certificate</title></head>
+            <body style='margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f9f9f9;'>
+              <iframe src="${url}" width="100%" height="80%" style="border:none;"></iframe>
+              <a href="${url}" download="${name}_Certificate.pdf" style="margin-top:20px;padding:12px 20px;background:#1f4e79;color:white;border-radius:6px;text-decoration:none;font-family:Arial;'>Download PDF</a>
+            </body>
+          </html>
+        `;
+
+        const preview = window.open();
+        preview.document.open();
+        preview.document.write(html);
+        preview.document.close();
       };
     }
   </script>
