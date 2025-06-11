@@ -22,7 +22,7 @@ const qp=k=>new URL(location).searchParams.get(k)||"";
 const empID = (qp("emp") || qp("id") || qp("empid") || qp("code") || "000001").toUpperCase();
 
 const fullName = decodeURIComponent(qp("name") || "Employee Name");
-const certNo   = "TWCLnD-" + empID;   // all caps
+const certNo   = "TWCLnD-" + empID;   // certificate prefix; empID is already uppercase
 const today    = new Date().toLocaleDateString('en-GB').replace(/\//g,"/");
 
 document.getElementById('btn').onclick=()=>{
